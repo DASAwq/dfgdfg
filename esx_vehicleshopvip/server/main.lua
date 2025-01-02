@@ -2,7 +2,7 @@ local VIPCoins = {}
 
 -- Load player VIP coins from the database when they join
 AddEventHandler('esx:playerLoaded', function(playerId, xPlayer)
-    local result = MySQL.scalar.await('SELECT vip_coins FROM users WHERE identifier = ?', {xPlayer.identifier})
+    local result = MySQL.scalar.await('SELECT coins FROM vip_coins WHERE player_id = ?', {xPlayer.identifier})
     VIPCoins[playerId] = result or 0
     TriggerClientEvent('esx_vehicleshopvip:updateVIPCoins', playerId, VIPCoins[playerId])
 end)
@@ -12,7 +12,7 @@ ESX.RegisterCommand('givevipcoin', 'admin', function(xPlayer, args, showError)
     local targetPlayer = ESX.GetPlayerFromId(args.playerId)
     if targetPlayer then
         VIPCoins[args.playerId] = (VIPCoins[args.playerId] or 0) + args.amount
-        MySQL.update('UPDATE users SET vip_coins = ? WHERE identifier = ?', {VIPCoins[args.playerId], targetPlayer.identifier})
+        MySQL.update('UPDATE vip_coins SET coins = ? WHERE player_id = ?', {VIPCoins[args.playerId], targetPlayer.identifier})
         TriggerClientEvent('esx_vehicleshopvip:updateVIPCoins', args.playerId, VIPCoins[args.playerId])
         xPlayer.showNotification(('Gave %s VIP Coins to %s'):format(args.amount, targetPlayer.getName()))
     else
@@ -27,11 +27,11 @@ end, true, {help = 'Give VIP coins to a player', validate = true, arguments = {
 RegisterNetEvent('esx_vehicleshopvip:buyVehicle')
 AddEventHandler('esx_vehicleshopvip:buyVehicle', function(model)
     local xPlayer = ESX.GetPlayerFromId(source)
-    local vehicleData = getVehicleFromModel(model)
+    local vehicleData = MySQL.single.await('SELECT * FROM vip_vehicles WHERE model = ?', {model})
 
     if vehicleData and VIPCoins[source] >= vehicleData.price then
         VIPCoins[source] = VIPCoins[source] - vehicleData.price
-        MySQL.update('UPDATE users SET vip_coins = ? WHERE identifier = ?', {VIPCoins[source], xPlayer.identifier})
+        MySQL.update('UPDATE vip_coins SET coins = ? WHERE player_id = ?', {VIPCoins[source], xPlayer.identifier})
         MySQL.insert('INSERT INTO owned_vehicles (owner, plate, vehicle) VALUES (?, ?, ?)', {
             xPlayer.identifier,
             GeneratePlate(),

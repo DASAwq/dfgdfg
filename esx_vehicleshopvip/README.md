@@ -28,7 +28,11 @@ The `esx_vehicleshopvip` is an extension of the standard ESX Vehicle Shop, desig
 
 ### Database
 
-- Import `esx_vehicleshopvip.sql` into your MySQL database to set up the necessary tables.
+- Import `esx_vehicleshopvip.sql` into your MySQL database to set up the necessary tables. You can do this by using a MySQL client like phpMyAdmin or MySQL Workbench. Here are the steps:
+  1. Open your MySQL client and connect to your database.
+  2. Select the database where you want to import the tables.
+  3. Use the import feature to upload the `esx_vehicleshopvip.sql` file.
+  4. Execute the import to create the tables and insert the initial data.
 
 ### Configuration
 
