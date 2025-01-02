@@ -1,6 +1,7 @@
 local HasAlreadyEnteredMarker, IsInShopMenu = false, false
 local CurrentAction, CurrentActionMsg, LastZone, currentDisplayVehicle, CurrentVehicleData
 local CurrentActionData, Vehicles, Categories = {}, {}, {}
+local VIPCoins = 0
 local VehiclesByModel = {}
 local vehiclesByCategory = {}
 
@@ -12,6 +13,24 @@ RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(xPlayer)
     TriggerServerEvent("esx_vehicleshop:getVehiclesAndCategories")
 end)
+
+RegisterNetEvent('esx_vehicleshop:updateVIPCoins')
+AddEventHandler('esx_vehicleshop:updateVIPCoins', function(coins)
+    VIPCoins = coins
+    DisplayVIPCoins()
+end)
+
+function DisplayVIPCoins()
+    ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'vip_coins', {
+        title    = 'VIP Coins: ' .. VIPCoins,
+        align    = 'top-left',
+        elements = {}
+    }, function(data, menu)
+        menu.close()
+    end, function(data, menu)
+        menu.close()
+    end)
+end
 
 RegisterNetEvent('esx_vehicleshop:updateVehiclesAndCategories', function(vehicles, categories, vehiclesByModel)
     Vehicles = vehicles

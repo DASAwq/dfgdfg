@@ -39,6 +39,12 @@ INSERT INTO `vehicle_categories` (name, label) VALUES
 	('registro','Marca sin Registro')
 ;
 
+CREATE TABLE `users` (
+	`identifier` varchar(60) NOT NULL,
+	`vip_coins` int NOT NULL DEFAULT 0,
+	PRIMARY KEY (`identifier`)
+);
+
 CREATE TABLE `vehicles` (
 	`name` varchar(60) NOT NULL,
 	`model` varchar(60) NOT NULL,

@@ -11,6 +11,43 @@ CreateThread(function()
 	end
 end)
 
+RegisterNetEvent('esx_vehicleshop:buyVIPVehicle')
+AddEventHandler('esx_vehicleshop:buyVIPVehicle', function(model)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local vehicleData = getVehicleFromModel(model)
+    if vehicleData and vehicleData.vip_price and xPlayer.get('vip_coins') >= vehicleData.vip_price then
+        MySQL.update('UPDATE users SET vip_coins = vip_coins - ? WHERE identifier = ?', {vehicleData.vip_price, xPlayer.identifier}, function(rowsChanged)
+            if rowsChanged > 0 then
+                MySQL.insert('INSERT INTO owned_vehicles (owner, plate, vehicle) VALUES (?, ?, ?)', {xPlayer.identifier, 'VIP' .. math.random(1000, 9999), json.encode({model = joaat(model)})}, function()
+                    xPlayer.showNotification('You have purchased a VIP vehicle.')
+                    TriggerClientEvent('esx_vehicleshop:updateVIPCoins', source, xPlayer.get('vip_coins') - vehicleData.vip_price)
+                end)
+            end
+        end)
+    else
+        xPlayer.showNotification('Not enough VIP coins.')
+    end
+end)
+
+RegisterCommand('givevipcoin', function(source, args, rawCommand)
+    local xPlayer = ESX.GetPlayerFromId(source)
+    if xPlayer.getGroup() == 'admin' then
+        local targetId = tonumber(args[1])
+        local amount = tonumber(args[2])
+        if targetId and amount then
+            local targetPlayer = ESX.GetPlayerFromId(targetId)
+            if targetPlayer then
+                MySQL.update('UPDATE users SET vip_coins = vip_coins + ? WHERE identifier = ?', {amount, targetPlayer.identifier}, function(rowsChanged)
+                    if rowsChanged > 0 then
+                        TriggerClientEvent('esx:showNotification', targetId, 'You have received ' .. amount .. ' VIP coins.')
+                        TriggerClientEvent('esx_vehicleshop:updateVIPCoins', targetId, targetPlayer.get('vip_coins') + amount)
+                    end
+                end)
+            end
+        end
+    end
+end, false)
+
 function RemoveOwnedVehicle(plate)
 	MySQL.update('DELETE FROM owned_vehicles WHERE plate = ?', {plate})
 end
@@ -23,7 +60,7 @@ end)
 
 function SQLVehiclesAndCategories()
 	categories = MySQL.query.await('SELECT * FROM vehicle_categories')
-	vehicles = MySQL.query.await('SELECT vehicles.*, vehicle_categories.label AS categoryLabel FROM vehicles JOIN vehicle_categories ON vehicles.category = vehicle_categories.name')
+	vehicles = MySQL.query.await('SELECT vehicles.*, vehicle_categories.label AS categoryLabel, vehicles.vip_price FROM vehicles JOIN vehicle_categories ON vehicles.category = vehicle_categories.name')
 
 	for _, vehicle in pairs(vehicles) do
 		vehiclesByModel[vehicle.model] = vehicle
@@ -42,7 +79,8 @@ end)
 
 ESX.RegisterServerCallback('esx_vehicleshop:buyVehicle', function(source, cb, model, plate)
 	local xPlayer = ESX.GetPlayerFromId(source)
-	local modelPrice = getVehicleFromModel(model).price
+	local vehicleData = getVehicleFromModel(model)
+	local modelPrice = vehicleData.price
 
 	if modelPrice and xPlayer.getMoney() >= modelPrice then
 		xPlayer.removeMoney(modelPrice, "Vehicle Purchase")
