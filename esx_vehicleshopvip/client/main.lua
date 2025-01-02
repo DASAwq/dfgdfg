@@ -1,4 +1,5 @@
 -- This is the new client/main.lua file for esx_vehicleshopvip
+-- This is the new client/main.lua file for esx_vehicleshopvip
 local HasAlreadyEnteredMarker, IsInShopMenu = false, false
 local CurrentAction, CurrentActionMsg, LastZone, currentDisplayVehicle, CurrentVehicleData
 local CurrentActionData, Vehicles, Categories = {}, {}, {}
